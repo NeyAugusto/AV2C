@@ -1,0 +1,55 @@
+#include <iostream>
+#include <unistd.h>
+#include <sys/wait.h>
+
+#define ARRAY_SIZE 1000
+#define NUM_PROCESSES 5
+#define ELEMENT_TO_FIND 42
+
+// Função para buscar o número no array
+int searchNumber(int start, int end, int number, int processNumber, int* array) {
+    for (int i = start; i < end; i++) {
+        if (array[i] == number) {
+            std::cout << "Número encontrado pelo processo " << processNumber << " na posição " << i << std::endl;
+            return processNumber;
+        }
+    }
+    return 0;
+}
+
+int main() {
+    int array[ARRAY_SIZE];
+    // Inicializar o array com números de 1 a ARRAY_SIZE
+    for (int i = 0; i < ARRAY_SIZE; i++) {
+        array[i] = i + 1;
+    }
+
+    // Criação dos processos
+    for (int i = 0; i < NUM_PROCESSES; i++) {
+        pid_t pid = fork();
+
+        if (pid == 0) { // Processo filho
+            int start = i * 200;
+            int end = start + 200;
+            int result = searchNumber(start, end, ELEMENT_TO_FIND, i + 1, array);
+            exit(result); // "Retorna" o número do processo como valor de saída
+        }
+    }
+
+    // Processo pai espera pelos filhos e verifica os valores de saída
+    int processNumber = 0;
+    for (int i = 0; i < NUM_PROCESSES; i++) {
+        int status;
+        wait(&status);
+        if (WIFEXITED(status)) {
+            int exitStatus = WEXITSTATUS(status);
+            if (exitStatus != 0) {
+                processNumber = exitStatus;
+            }
+        }
+    }
+
+    std::cout << "Número encontrado pelo processo " << processNumber << std::endl;
+
+    return 0;
+}
