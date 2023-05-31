@@ -1,0 +1,61 @@
+#include <iostream>
+#include <chrono>
+#include <thread>
+#include <graphics.h>
+
+int main() {
+    // Inicializa a biblioteca gráfica
+    int gd = DETECT, gm;
+    initgraph(&gd, &gm, "");
+
+    // Obtém o horário atual
+    std::chrono::system_clock::time_point now = std::chrono::system_clock::now();
+    std::time_t currentTime = std::chrono::system_clock::to_time_t(now);
+    struct tm *localTime = std::localtime(&currentTime);
+
+    // Calcula o tempo final (1 minuto depois)
+    std::time_t endTime = currentTime + 60;
+    struct tm *endLocalTime = std::localtime(&endTime);
+
+    // Loop principal por 1 minuto
+    while (std::chrono::system_clock::now() < std::chrono::system_clock::from_time_t(endTime)) {
+        // Obtém o horário atual a cada iteração
+        now = std::chrono::system_clock::now();
+        currentTime = std::chrono::system_clock::to_time_t(now);
+        localTime = std::localtime(&currentTime);
+
+        // Limpa a tela
+        cleardevice();
+
+        // Converte o formato de 24 horas para 12 horas com AM/PM
+        int hour = localTime->tm_hour;
+        std::string ampm = (hour < 12) ? "AM" : "PM";
+        if (hour > 12) {
+            hour -= 12;
+        } else if (hour == 0) {
+            hour = 12;
+        }
+
+        // Converte o horário em strings formatadas
+        char hourStr[3], minStr[3], secStr[3];
+        sprintf(hourStr, "%02d", hour);
+        sprintf(minStr, "%02d", localTime->tm_min);
+        sprintf(secStr, "%02d", localTime->tm_sec);
+
+        // Exibe o horário na tela
+        outtextxy(100, 100, hourStr);
+        outtextxy(130, 100, ":");
+        outtextxy(140, 100, minStr);
+        outtextxy(170, 100, ":");
+        outtextxy(180, 100, secStr);
+        outtextxy(220, 100, ampm.c_str());
+
+        // Aguarda 1 segundo antes de atualizar a exibição
+        std::this_thread::sleep_for(std::chrono::seconds(1));
+    }
+
+    // Fecha a janela gráfica
+    closegraph();
+
+    return 0;
+}
